@@ -1,0 +1,161 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    line-height: 1.6;
+  }
+}
+
+@layer components {
+  .gradient-text {
+    @apply bg-gradient-to-r from-purple-600 to-teal-500 bg-clip-text text-transparent;
+  }
+  
+  .gradient-bg {
+    @apply bg-gradient-to-r from-purple-600 to-teal-500;
+  }
+  
+  .card-hover {
+    @apply hover:shadow-2xl hover:-translate-y-2 transition-all duration-300;
+  }
+  
+  .btn-primary {
+    @apply bg-gradient-to-r from-purple-600 to-teal-500 text-white px-8 py-4 rounded-full font-semibold hover:shadow-2xl transform hover:scale-105 transition-all duration-200;
+  }
+  
+  .btn-secondary {
+    @apply bg-white text-gray-700 px-8 py-4 rounded-full font-semibold border-2 border-gray-200 hover:border-purple-300 hover:text-purple-600 transition-all duration-200;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom, #6C2BD9, #00C2CB);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(to bottom, #5a23b8, #009aa1);
+}
+
+/* Smooth animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideIn {
+  from { transform: translateX(-20px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.8s ease-out;
+}
+
+.animate-slideIn {
+  animation: slideIn 0.8s ease-out;
+}
+
+/* Focus states for accessibility */
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid #6C2BD9;
+  outline-offset: 2px;
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}
+
+/* Exam Editor Specific Styles */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.question-card {
+  @apply border border-gray-200 rounded-xl bg-white transition-all duration-200;
+}
+
+.question-card:hover {
+  @apply shadow-md border-gray-300;
+}
+
+.question-card.selected {
+  @apply border-blue-300 bg-blue-50;
+}
+
+.question-header {
+  @apply p-4 border-b border-gray-100 cursor-pointer;
+}
+
+.question-content {
+  @apply p-4 space-y-4;
+}
+
+.option-input {
+  @apply flex items-center gap-2 p-3 border border-gray-200 rounded-lg transition-colors;
+}
+
+.option-input:hover {
+  @apply border-gray-300 bg-gray-50;
+}
+
+.option-input.correct {
+  @apply border-green-300 bg-green-50;
+}
+
+/* Bulk edit mode styles */
+.bulk-edit-toolbar {
+  @apply mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200;
+}
+
+/* Question type badges */
+.question-type-badge {
+  @apply px-2 py-1 text-xs rounded-full font-medium;
+}
+
+.question-type-mcq {
+  @apply bg-green-100 text-green-700;
+}
+
+.question-type-multiple {
+  @apply bg-blue-100 text-blue-700;
+}
+
+/* Responsive adjustments for exam editor */
+@media (max-width: 768px) {
+  .exam-editor-modal {
+    @apply mx-2 my-4 max-w-none;
+  }
+  
+  .question-grid {
+    @apply grid-cols-1;
+  }
+  
+  .option-grid {
+    @apply grid-cols-1;
+  }
+}

@@ -1,0 +1,76 @@
+version: '3.8'
+
+services:
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: examport-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-root}
+      MYSQL_DATABASE: examwizards
+      MYSQL_USER: examport
+      MYSQL_PASSWORD: examport123
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - examport-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend Service
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: examport-backend
+    environment:
+      DB_URL: jdbc:mysql://mysql:3306/examwizards
+      DB_USERNAME: examport
+      DB_PASSWORD: examport123
+      EMAIL_USERNAME: ${EMAIL_USERNAME}
+      EMAIL_PASSWORD: ${EMAIL_PASSWORD}
+      EMAIL_FROM: ${EMAIL_FROM}
+      EMAIL_ENABLED: ${EMAIL_ENABLED:-true}
+      EMAIL_ADMIN: ${EMAIL_ADMIN}
+      RAZORPAY_KEY_ID: ${RAZORPAY_KEY_ID}
+      RAZORPAY_KEY_SECRET: ${RAZORPAY_KEY_SECRET}
+      GENAI_API_KEY: ${GENAI_API_KEY}
+      JWT_SECRET: ${JWT_SECRET:-your-jwt-secret-key-here}
+      FRONTEND_URL: http://localhost:3000
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - examport-network
+    volumes:
+      - backend-logs:/app/logs
+
+  # Frontend Service
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: examport-frontend
+    environment:
+      VITE_API_BASE_URL: http://localhost:8080/api
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - examport-network
+
+networks:
+  examport-network:
+    driver: bridge
+
+volumes:
+  mysql-data:
+  backend-logs:

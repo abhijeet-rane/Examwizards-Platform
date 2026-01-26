@@ -1,0 +1,44 @@
+# Git
+.git
+.gitignore
+
+# Node modules
+**/node_modules
+**/npm-debug.log
+
+# Build outputs
+**/target
+**/dist
+**/build
+**/.vite
+
+# IDE
+.idea
+.vscode
+*.iml
+**/.settings
+**/.classpath
+**/.project
+
+# Logs
+**/logs
+**/*.log
+
+# Environment files (will be passed at runtime)
+**/.env
+**/.env.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test files
+**/test
+**/tests
+**/__tests__
+**/*.test.*
+**/*.spec.*
+
+# Documentation
+*.md
+!README.md
