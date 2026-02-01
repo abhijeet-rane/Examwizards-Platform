@@ -24,8 +24,6 @@ FROM ubuntu:22.04
 RUN apt-get update && apt-get install -y \
     openjdk-17-jre \
     nginx \
-    mysql-server \
-    supervisor \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
@@ -38,19 +36,13 @@ COPY --from=backend-build /app/backend/target/*.jar /app/backend/app.jar
 # Copy frontend build
 COPY --from=frontend-build /app/frontend/dist /app/frontend
 
-# Copy nginx configuration
-COPY nginx-monolith.conf /etc/nginx/sites-available/default
-
-# Copy supervisor configuration
-COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-
-# Copy MySQL initialization script
-COPY init-mysql.sh /docker-entrypoint-initdb.d/
+# Copy nginx config
+COPY nginx.conf /etc/nginx/sites-available/default
 
 # Expose ports
-EXPOSE 3000 8080 3306
+EXPOSE 3000 8080
 
-# Set environment variables for MySQL
+# Set environment variables for MySQL (not used in this build, for reference only)
 ENV MYSQL_ROOT_PASSWORD=root \
     MYSQL_DATABASE=examwizards
 
@@ -72,5 +64,7 @@ ENV DB_URL=jdbc:mysql://localhost:3306/examwizards \
     SERVER_PORT=8080 \
     NODE_ENV=production
 
-# Start supervisor
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+# Start script
+COPY start.sh /start.sh
+RUN chmod +x /start.sh
+CMD ["/start.sh"]
