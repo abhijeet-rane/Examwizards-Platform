@@ -26,7 +26,7 @@ const VerifyEmail = () => {
 
   const verifyEmailToken = async (verificationToken: string) => {
     try {
-      const response = await fetch(`http://localhost:8080/api/auth/verify-email?token=${verificationToken}`, {
+      const response = await fetch(`/api/auth/verify-email?token=${verificationToken}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -65,7 +65,7 @@ const VerifyEmail = () => {
 
     setResending(true);
     try {
-      const response = await fetch('http://localhost:8080/api/auth/resend-verification', {
+      const response = await fetch('/api/auth/resend-verification', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

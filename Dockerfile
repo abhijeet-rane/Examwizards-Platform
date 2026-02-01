@@ -50,9 +50,27 @@ COPY init-mysql.sh /docker-entrypoint-initdb.d/
 # Expose ports
 EXPOSE 3000 8080 3306
 
-# Set environment variables
-ENV MYSQL_ROOT_PASSWORD=root
-ENV MYSQL_DATABASE=examwizards
+# Set environment variables for MySQL
+ENV MYSQL_ROOT_PASSWORD=root \
+    MYSQL_DATABASE=examwizards
+
+# Set application environment variables (with defaults)
+ENV DB_URL=jdbc:mysql://localhost:3306/examwizards \
+    DB_USERNAME=root \
+    DB_PASSWORD=root \
+    EMAIL_USERNAME=abhijeetrane204@gmail.com \
+    EMAIL_PASSWORD=afgrhlbssxrwgwqz \
+    EMAIL_FROM="ExamWizards <noreply@examwizards.com>" \
+    EMAIL_ENABLED=true \
+    EMAIL_ADMIN=abhijeetrane204@gmail.com \
+    RAZORPAY_KEY_ID=rzp_test_8aUQmru5Kk5M0H \
+    RAZORPAY_KEY_SECRET=vsqBJcTH5XuRF2f9Ti9DoJHJ \
+    GENAI_API_KEY=AIzaSyCZtpoHsn_agVg7rfW_VUXtaqWrOk4l4Ro \
+    JWT_SECRET=examport-secret-key-2024 \
+    FRONTEND_URL=http://localhost:5173 \
+    API_BASE_URL=http://localhost:8080/api \
+    SERVER_PORT=8080 \
+    NODE_ENV=production
 
 # Start supervisor
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
