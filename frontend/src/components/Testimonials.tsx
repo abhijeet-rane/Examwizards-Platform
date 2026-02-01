@@ -77,7 +77,7 @@ const Testimonials = () => {
 
       // First test if the review system is working
       try {
-        const testResponse = await fetch('http://localhost:8080/api/reviews/test');
+        const testResponse = await fetch('/api/reviews/test');
         console.log('Review test endpoint status:', testResponse.status);
         if (!testResponse.ok) {
           console.warn('Review system test failed, using fallback testimonials');
