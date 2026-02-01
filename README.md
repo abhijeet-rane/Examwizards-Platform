@@ -10,7 +10,7 @@ This project is fully containerized and ready for Docker deployment.
 
 ## 🚀 Quick Start
 
-### For Docker Deployment (Recommended)
+### For Docker Deployment (Recommended )
 
 ```bash
 # 1. Setup environment
