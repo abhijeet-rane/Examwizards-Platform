@@ -1,4 +1,4 @@
-# 🎓 ExamPort - Online Examination Platform
+# 🎓 Examwizards - Online Examination Platform
 
 A comprehensive online examination platform with multi-role support, real-time analytics, and AI-powered features.
 
