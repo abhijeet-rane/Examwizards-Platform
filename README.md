@@ -2,7 +2,7 @@
 
 A comprehensive online examination platform with multi-role support, real-time analytics, and AI-powered features.
 
-## 🐳 Docker Deployment Ready!
+## 🐳 Docker Deployment Ready
 
 This project is fully containerized and ready for Docker deployment.
 
