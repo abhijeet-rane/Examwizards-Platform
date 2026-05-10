@@ -4,26 +4,32 @@ import { handleApiError, handleNetworkError } from '../utils/errorHandler';
 // API Configuration
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
-// Create axios instance with default configuration
+// No default Content-Type: JSON requests set it below; FormData must omit it so the browser adds multipart + boundary.
 const apiClient: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
   timeout: 30000, // 30 seconds timeout
-  headers: {
-    'Content-Type': 'application/json',
-  },
 });
 
 // Request interceptor to add auth token
 apiClient.interceptors.request.use(
   (config) => {
-    // FormData must use multipart boundary set by the browser. Never send default
-    // application/json or a manual "multipart/form-data" without boundary.
     if (config.data instanceof FormData && config.headers) {
       const h = config.headers as { delete?: (name: string) => void } & Record<string, unknown>;
       if (typeof h.delete === 'function') {
         h.delete('Content-Type');
       } else {
         delete h['Content-Type'];
+      }
+    } else if (
+      config.data != null &&
+      typeof config.data === 'object' &&
+      !(config.data instanceof URLSearchParams) &&
+      !(config.data instanceof ArrayBuffer) &&
+      !(config.data instanceof Blob)
+    ) {
+      const h = config.headers as Record<string, unknown>;
+      if (h['Content-Type'] == null && h['content-type'] == null) {
+        h['Content-Type'] = 'application/json';
       }
     }
 

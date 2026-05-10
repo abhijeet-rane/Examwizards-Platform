@@ -233,7 +233,6 @@ public class CourseController {
     }
 
     @GetMapping("/instructor")
-    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public ResponseEntity<?> getCoursesForInstructor(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
             logger.warn("Unauthorized access attempt to instructor courses endpoint");
@@ -286,8 +285,13 @@ public class CourseController {
                 }
                 courseData.put("enrollmentCount", enrollmentCount);
                 
-                Long examTotal = examRepo.countByCourseNative(course.getId());
-                int examCount = examTotal != null ? examTotal.intValue() : 0;
+                int examCount = 0;
+                try {
+                    Long examTotal = examRepo.countByCourseNative(course.getId());
+                    examCount = examTotal != null ? examTotal.intValue() : 0;
+                } catch (Exception ex) {
+                    logger.debug("exam count skipped for course {}: {}", course.getId(), ex.getMessage());
+                }
                 courseData.put("examCount", examCount);
                 
                 coursesWithStats.add(courseData);

@@ -33,6 +33,7 @@ public class DatabaseMigrationService implements ApplicationRunner {
             // Create tables if they don't exist (fallback method)
             createTablesIfNotExist();
             ensureCourseEnrollmentTablesIfMissing();
+            repairCoursesAndEnrollmentColumnsIfNeeded();
             
             // Check and fix users table AUTO_INCREMENT
             fixUsersTableAutoIncrement();
@@ -354,6 +355,45 @@ public class DatabaseMigrationService implements ApplicationRunner {
             }
         } catch (Exception e) {
             logger.warn("Could not ensure course/enrollment tables: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * Hibernate's ddl-auto may not alter legacy/partial tables. Add columns JPA expects so
+     * instructor queries and course create do not fail with SQLGrammarException.
+     */
+    private void repairCoursesAndEnrollmentColumnsIfNeeded() {
+        try {
+            if (checkTableExists("courses")) {
+                addColumnIfMissing("courses", "instructor_id", "BIGINT NULL");
+                addColumnIfMissing("courses", "visibility", "VARCHAR(50) NOT NULL DEFAULT 'PRIVATE'");
+                addColumnIfMissing("courses", "pricing", "VARCHAR(50) NOT NULL DEFAULT 'FREE'");
+                addColumnIfMissing("courses", "price", "DECIMAL(10,2) NULL");
+                addColumnIfMissing("courses", "description", "TEXT NULL");
+            }
+            if (checkTableExists("enrollments")) {
+                addColumnIfMissing("enrollments", "enrollment_date", "DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6)");
+                addColumnIfMissing("enrollments", "status", "VARCHAR(50) NOT NULL DEFAULT 'ENROLLED'");
+                addColumnIfMissing("enrollments", "payment_transaction_id", "VARCHAR(255) NULL");
+                addColumnIfMissing("enrollments", "created_at", "DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6)");
+                addColumnIfMissing("enrollments", "updated_at", "DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6)");
+            }
+        } catch (Exception e) {
+            logger.warn("Could not repair course/enrollment columns: {}", e.getMessage());
+        }
+    }
+
+    private void addColumnIfMissing(String tableName, String columnName, String columnDefinition) {
+        try {
+            Integer n = jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = ? AND column_name = ?",
+                    Integer.class, tableName, columnName);
+            if (n != null && n == 0) {
+                jdbcTemplate.execute("ALTER TABLE `" + tableName + "` ADD COLUMN `" + columnName + "` " + columnDefinition);
+                logger.info("Added column {} to {}", columnName, tableName);
+            }
+        } catch (Exception e) {
+            logger.warn("Skipping add column {}.{}: {}", tableName, columnName, e.getMessage());
         }
     }
 }

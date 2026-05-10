@@ -217,40 +217,44 @@ public class EnrollmentService {
      * Get instructor statistics by username
      */
     public Map<String, Object> getInstructorStats(String username) {
-        // Get all courses by instructor username
-        List<Course> instructorCourses = courseRepository.findByInstructorUsername(username);
-        
         Map<String, Object> stats = new HashMap<>();
-        
-        long totalEnrollments = 0;
-        long totalRevenue = 0;
-        Map<String, Object> courseStats = new HashMap<>();
-        
-        for (Course course : instructorCourses) {
-            long courseEnrollments = getEnrollmentCountByCourse(course.getId());
-            totalEnrollments += courseEnrollments;
-            
-            // Calculate revenue for paid courses
-            if (course.getPricing() != null && course.getPricing().name().equals("PAID") && course.getPrice() != null) {
-                totalRevenue += courseEnrollments * course.getPrice().longValue();
+        try {
+            List<Course> instructorCourses = courseRepository.findByInstructorUsername(username);
+
+            long totalEnrollments = 0;
+            long totalRevenue = 0;
+            Map<String, Object> courseStats = new HashMap<>();
+
+            for (Course course : instructorCourses) {
+                long courseEnrollments = getEnrollmentCountByCourse(course.getId());
+                totalEnrollments += courseEnrollments;
+
+                if (course.getPricing() != null && course.getPricing().name().equals("PAID") && course.getPrice() != null) {
+                    totalRevenue += courseEnrollments * course.getPrice().longValue();
+                }
+
+                Map<String, Object> courseStat = new HashMap<>();
+                courseStat.put("courseName", course.getName());
+                courseStat.put("enrollments", courseEnrollments);
+                courseStat.put("pricing", course.getPricing() != null ? course.getPricing().name() : "FREE");
+                courseStat.put("price", course.getPrice());
+                courseStat.put("revenue", course.getPricing() != null && course.getPricing().name().equals("PAID") && course.getPrice() != null ?
+                        courseEnrollments * course.getPrice().longValue() : 0);
+
+                courseStats.put(course.getId().toString(), courseStat);
             }
-            
-            Map<String, Object> courseStat = new HashMap<>();
-            courseStat.put("courseName", course.getName());
-            courseStat.put("enrollments", courseEnrollments);
-            courseStat.put("pricing", course.getPricing() != null ? course.getPricing().name() : "FREE");
-            courseStat.put("price", course.getPrice());
-            courseStat.put("revenue", course.getPricing() != null && course.getPricing().name().equals("PAID") && course.getPrice() != null ? 
-                          courseEnrollments * course.getPrice().longValue() : 0);
-            
-            courseStats.put(course.getId().toString(), courseStat);
+
+            stats.put("totalCourses", instructorCourses.size());
+            stats.put("totalEnrollments", totalEnrollments);
+            stats.put("totalRevenue", totalRevenue);
+            stats.put("courseStats", courseStats);
+        } catch (Exception e) {
+            logger.error("getInstructorStats failed for {}", username, e);
+            stats.put("totalCourses", 0);
+            stats.put("totalEnrollments", 0L);
+            stats.put("totalRevenue", 0L);
+            stats.put("courseStats", new HashMap<>());
         }
-        
-        stats.put("totalCourses", instructorCourses.size());
-        stats.put("totalEnrollments", totalEnrollments);
-        stats.put("totalRevenue", totalRevenue);
-        stats.put("courseStats", courseStats);
-        
         return stats;
     }
 
