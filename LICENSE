@@ -1,0 +1,75 @@
+ExamWizards Platform — Source-Available Proprietary License
+
+Copyright (c) 2026 Abhijeet Rane. All rights reserved.
+
+1. Grant of limited rights
+
+Subject to the terms of this License, you may:
+
+  (a) View and browse the source code in this repository for personal,
+      educational, or non-commercial reference purposes.
+
+  (b) Clone or download a copy of this repository solely for the purposes
+      described in (a).
+
+No other rights are granted by implication or estoppel.
+
+2. Restrictions
+
+Without prior written permission from the copyright holder, you may not:
+
+  (a) Use the Software or any portion of it for any commercial purpose,
+      including but not limited to offering a competing product or service,
+      operating a hosted service for third parties, or internal production
+      use in a for-profit context.
+
+  (b) Redistribute, publish, mirror, or sublicense the Software or
+      derivative works, in source or binary form, whether modified or not.
+
+  (c) Create derivative works based on the Software for distribution or
+      public deployment.
+
+  (d) Remove, alter, or obscure any proprietary notices, license terms,
+      or attribution included with the Software.
+
+  (e) Use the name "ExamWizards", related branding, or the copyright
+      holder's name to imply endorsement of any product or service without
+      prior written consent.
+
+3. Commercial and derivative use
+
+Any commercial use, redistribution, modification for deployment, or creation
+of derivative products requires a separate written agreement with the
+copyright holder. Contact the copyright holder to discuss licensing terms.
+
+4. Third-party components
+
+This Software may incorporate or depend on third-party open-source components
+that remain subject to their respective licenses. Nothing in this License
+is intended to restrict your rights under those third-party licenses.
+
+5. No warranty
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY,
+WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF,
+OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+6. Termination
+
+Your rights under this License terminate automatically if you breach any
+term. Sections 2, 4, 5, and 7 survive termination.
+
+7. General
+
+This License constitutes the entire agreement regarding the use of this
+repository as made available by the copyright holder. If any provision is
+held invalid, the remaining provisions remain in effect.
+
+For licensing inquiries:
+
+  Abhijeet Rane
+  Email: abhijeetrane204@gmail.com

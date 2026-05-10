@@ -1,0 +1,135 @@
+# =============================================================================
+# ExamWizards Platform - root .gitignore
+# Keeps secrets, build artifacts, caches, and IDE noise out of version control.
+# Does NOT ignore: Dockerfiles, Jenkinsfile, K8s YAML, Terraform *.tf,
+# .github/workflows, .env.example, LICENSE, README, etc.
+# Local-only docs: files/ (see files/ entry below)
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Environment & secrets (never commit real credentials)
+# -----------------------------------------------------------------------------
+.env
+.env.*
+!.env.example
+!.env.template
+!.env.*.example
+*.pem
+*.p12
+*.pfx
+*.key
+!*.key.example
+secrets/
+.secrets/
+
+# -----------------------------------------------------------------------------
+# Local documentation (not published with the repo)
+# -----------------------------------------------------------------------------
+files/
+
+# -----------------------------------------------------------------------------
+# OS junk
+# -----------------------------------------------------------------------------
+.DS_Store
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# -----------------------------------------------------------------------------
+# Logs & runtime output
+# -----------------------------------------------------------------------------
+*.log
+logs/
+**/logs/
+
+# -----------------------------------------------------------------------------
+# IDEs & editors (team-shared editor config can be whitelisted explicitly)
+# -----------------------------------------------------------------------------
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/*
+!.vscode/extensions.json
+*.swp
+*.swo
+*~
+
+# -----------------------------------------------------------------------------
+# Frontend (Vite / React / Node)
+# -----------------------------------------------------------------------------
+node_modules/
+**/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/.vite/
+**/coverage/
+**/.eslintcache
+**/.turbo/
+**/.parcel-cache/
+.npm/
+.pnpm-store/
+.yarn/
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+*.tsbuildinfo
+
+# -----------------------------------------------------------------------------
+# Backend (Maven / Java)
+# -----------------------------------------------------------------------------
+**/target/
+*.class
+hs_err_pid*.log
+replay_pid*.log
+
+# -----------------------------------------------------------------------------
+# Optional chatbot service
+# -----------------------------------------------------------------------------
+chatbot/node_modules/
+
+# -----------------------------------------------------------------------------
+# Terraform (when added under repo root or infra/)
+# -----------------------------------------------------------------------------
+**/.terraform/
+# Commit .terraform.lock.hcl for reproducible provider versions.
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# -----------------------------------------------------------------------------
+# Docker / local runtime
+# -----------------------------------------------------------------------------
+*.pid
+
+# -----------------------------------------------------------------------------
+# Test / coverage / reports
+# -----------------------------------------------------------------------------
+**/coverage/
+**/.nyc_output/
+**/jacoco.exec
+**/site/
+
+# -----------------------------------------------------------------------------
+# Temporary & local scratch
+# -----------------------------------------------------------------------------
+tmp/
+temp/
+uploads/
+.cache/
+*.tmp
+*.temp
+*.bak
+
+# -----------------------------------------------------------------------------
+# Spring Boot / JVM
+# -----------------------------------------------------------------------------
+**/spring-boot-devtools.properties

@@ -1,0 +1,7 @@
+# Example: copy to `terraform.tfvars` (gitignored) before plan/apply.
+
+aws_region           = "us-east-1"
+project_name         = "examwizards"
+environment          = "dev"
+enable_vpc           = false
+enable_ecs_cluster   = false

@@ -1,3 +1,18 @@
+# Dependencies
+node_modules
+
+# Build & Vite pre-bundled cache (must not be committed)
+dist
+dist-ssr
+.vite
+
+# Local env overrides
+*.local
+.env
+.env.*
+!.env.example
+!.env.template
+
 # Logs
 logs
 *.log
@@ -7,19 +22,22 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
+# Tests & coverage
+coverage
+.nyc_output
 
-# Editor directories and files
+# Editor (allow optional shared extensions list)
 .vscode/*
 !.vscode/extensions.json
 .idea
-.DS_Store
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
-.env
+
+# OS
+.DS_Store
+
+# TypeScript
+*.tsbuildinfo

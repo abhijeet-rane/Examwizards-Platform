@@ -1,0 +1,5 @@
+# Example only — copy to terraform.tfvars (not committed) for preview apply.
+
+enable_azure  = "false"
+location      = "eastus2"
+project_name  = "examwizards-preview"

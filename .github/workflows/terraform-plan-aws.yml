@@ -1,0 +1,57 @@
+name: Terraform Plan (AWS)
+
+# Runs a read-only plan when infra changes on PRs. Requires repository
+# variable TF_AWS_ROLE_ARN — see infra/aws/docs/github-oidc-for-actions.md
+
+on:
+  pull_request:
+    paths:
+      - "infra/aws/terraform/**"
+      - ".github/workflows/terraform-plan-aws.yml"
+
+permissions:
+  contents: read
+  id-token: write
+  pull-requests: read
+
+concurrency:
+  group: tf-plan-aws-${{ github.repository }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  plan:
+    name: terraform plan
+    runs-on: ubuntu-latest
+    env:
+      TF_IN_AUTOMATION: "true"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.7.5"
+
+      - name: Terraform fmt (check)
+        run: terraform fmt -check -recursive infra/aws/terraform
+
+      - name: Terraform init (local backend)
+        working-directory: infra/aws/terraform
+        run: terraform init -backend=false -input=false
+
+      - name: Configure AWS credentials (OIDC)
+        id: aws
+        if: ${{ vars.TF_AWS_ROLE_ARN != '' }}
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.TF_AWS_ROLE_ARN }}
+          aws-region: ${{ vars.TF_AWS_REGION || 'us-east-1' }}
+
+      - name: Terraform plan
+        if: ${{ vars.TF_AWS_ROLE_ARN != '' }}
+        working-directory: infra/aws/terraform
+        run: terraform plan -no-color -input=false
+
+      - name: OIDC role not configured
+        if: ${{ vars.TF_AWS_ROLE_ARN == '' }}
+        run: |
+          echo "::notice title=Terraform plan skipped::Set Actions variable TF_AWS_ROLE_ARN to enable terraform plan on PRs. See infra/aws/docs/github-oidc-for-actions.md"

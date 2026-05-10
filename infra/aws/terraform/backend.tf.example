@@ -1,0 +1,11 @@
+# Remote state (example only — create S3 bucket + DynamoDB lock table first)
+
+terraform {
+  backend "s3" {
+    bucket         = "REPLACE_ME-terraform-state"
+    key            = "examwizards/dev/terraform.tfstate"
+    region         = "us-east-1"
+    dynamodb_table = "REPLACE_ME-terraform-locks"
+    encrypt        = true
+  }
+}

@@ -1,25 +1,38 @@
+# Maven
 /target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
 
-# Environment variables (keep .env.example for reference)
+# Eclipse (prefer importing as Maven project; do not commit machine-specific metadata)
+.classpath
+.project
+.settings/
+bin/
+
+# Environment (root .env also applies; keep explicit for backend-only workflows)
 .env
-.env.local
-.env.development
-.env.test
-.env.production
+.env.*
 !.env.example
-.vscode
+!.env.template
 
-# IDE files
+# IDE
 .idea/
-.vscode/
 *.iml
-*.ipr
-*.iws
+.vscode/
 
-# OS files
-.DS_Store
-Thumbs.db
-
-# Log files
+# Logs
 *.log
 logs/
+
+# JVM crash dumps
+hs_err_pid*.log
+replay_pid*.log
+
+# OS
+.DS_Store
+Thumbs.db
