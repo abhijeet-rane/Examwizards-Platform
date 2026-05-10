@@ -39,6 +39,9 @@ public class EmailService {
     @Value("${app.email.admin}")
     private String adminEmail;
 
+    @Value("${app.frontend.url:http://localhost:5173}")
+    private String frontendBaseUrl;
+
     /**
      * Send exam result notification to student (Plain Text)
      */
@@ -112,7 +115,7 @@ public class EmailService {
             helper.setTo(toEmail);
             helper.setSubject("🔐 Verify Your Email - ExamWizards");
             
-            String verificationUrl = "http://localhost:5173/verify-email?token=" + token;
+            String verificationUrl = frontendBaseUrl + "/verify-email?token=" + token;
             String htmlBody = buildVerificationEmailBody(toEmail, verificationUrl);
             helper.setText(htmlBody, true);
             
@@ -142,7 +145,7 @@ public class EmailService {
             helper.setTo(toEmail);
             helper.setSubject("🔑 Reset Your Password - ExamWizards");
             
-            String resetUrl = "http://localhost:5173/reset-password?token=" + token;
+            String resetUrl = frontendBaseUrl + "/reset-password?token=" + token;
             String htmlBody = buildPasswordResetEmailBody(toEmail, resetUrl);
             helper.setText(htmlBody, true);
             
@@ -473,7 +476,7 @@ public class EmailService {
         // Footer
         html.append("<div class='footer'>");
         html.append("<p style='margin: 0;'>Best regards,<br><strong>ExamWizards Team</strong></p>");
-        html.append("<p style='margin: 10px 0 0 0;'><a href='http://localhost:5173'>Visit ExamWizards</a></p>");
+        html.append("<p style='margin: 10px 0 0 0;'><a href='").append(frontendBaseUrl).append("'>Visit ExamWizards</a></p>");
         html.append("</div>");
         
         html.append("</div>");
@@ -807,7 +810,7 @@ public class EmailService {
         // Footer
         html.append("<div class='footer'>");
         html.append("<p style='margin: 0;'>Best regards,<br><strong>ExamWizards Team</strong></p>");
-        html.append("<p style='margin: 10px 0 0 0;'><a href='http://localhost:5173'>Visit ExamWizards</a> | <a href='mailto:support@examwizards.com'>Contact Support</a></p>");
+        html.append("<p style='margin: 10px 0 0 0;'><a href='").append(frontendBaseUrl).append("'>Visit ExamWizards</a> | <a href='mailto:support@examwizards.com'>Contact Support</a></p>");
         html.append("<p style='margin: 10px 0 0 0; font-size: 12px;'>© 2025 ExamWizards. All rights reserved.</p>");
         html.append("</div>");
         
@@ -1023,7 +1026,7 @@ public class EmailService {
         // Footer
         html.append("<div class='footer'>");
         html.append("<p style='margin: 0;'>Best regards,<br><strong>ExamWizards Support Team</strong></p>");
-        html.append("<p style='margin: 10px 0 0 0;'><a href='http://localhost:5173'>Visit ExamWizards</a> | <a href='mailto:support@examwizards.com'>Contact Support</a></p>");
+        html.append("<p style='margin: 10px 0 0 0;'><a href='").append(frontendBaseUrl).append("'>Visit ExamWizards</a> | <a href='mailto:support@examwizards.com'>Contact Support</a></p>");
         html.append("<p style='margin: 10px 0 0 0; font-size: 12px;'>© 2025 ExamWizards. All rights reserved.</p>");
         html.append("</div>");
         
@@ -1150,7 +1153,7 @@ public class EmailService {
         // Footer
         html.append("<div class='footer'>");
         html.append("<p style='margin: 0;'>Best regards,<br><strong>ExamWizards Support Team</strong></p>");
-        html.append("<p style='margin: 10px 0 0 0;'><a href='http://localhost:5173'>Visit ExamWizards</a> | <a href='mailto:support@examwizards.com'>Contact Support</a></p>");
+        html.append("<p style='margin: 10px 0 0 0;'><a href='").append(frontendBaseUrl).append("'>Visit ExamWizards</a> | <a href='mailto:support@examwizards.com'>Contact Support</a></p>");
         html.append("<p style='margin: 10px 0 0 0; font-size: 12px;'>© 2025 ExamWizards. All rights reserved.</p>");
         html.append("</div>");
         

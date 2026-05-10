@@ -21,8 +21,8 @@ public class ExamPortApplication {
 	public void onApplicationReady() {
 		logger.info("=================================================");
 		logger.info("🚀 ExamPort Application Started Successfully!");
-		logger.info("🌐 Server running on: http://localhost:8080");
-		logger.info("📚 API Documentation: http://localhost:8080/api");
+		logger.info("🌐 Server is running and ready to accept requests");
+		logger.info("📚 API base path: /api");
 		logger.info("🔐 Authentication endpoints: /api/auth/*");
 		logger.info("=================================================");
 	}

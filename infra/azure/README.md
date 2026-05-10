@@ -440,3 +440,34 @@ terraform validate
 ```
 
 This matches the GitHub Actions job that validates Terraform syntax without applying.
+
+---
+
+## Automatic CD to Azure (main/master)
+
+Workflow: **`.github/workflows/deploy-azure-preview.yml`**
+
+On every push to `main`/`master` (or manual run), it:
+
+1. Builds backend JAR and deploys to Azure Web App  
+2. Validates chatbot source and deploys chatbot zip to Azure Web App
+
+### Required GitHub configuration
+
+Add these in your GitHub repository:
+
+- **Repository Variables**
+  - `AZURE_API_APP_NAME` (example: `examwizards-prev-abhijeet-api`)
+  - `AZURE_CHATBOT_APP_NAME` (example: `examwizards-prev-abhijeet-chatbot`)
+- **Repository Secrets**
+  - `AZURE_WEBAPP_API_PUBLISH_PROFILE`
+  - `AZURE_WEBAPP_CHATBOT_PUBLISH_PROFILE`
+
+Publish profile secret values come from Azure Portal:
+**Web App → Get publish profile** (download file, copy full XML).
+
+### One-time chatbot setting
+
+Because chatbot deploys source files (not prebuilt `node_modules`), ensure:
+
+- `SCM_DO_BUILD_DURING_DEPLOYMENT=true` in chatbot app settings

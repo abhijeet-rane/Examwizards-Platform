@@ -18,7 +18,7 @@ Backend-heavy · Docker-first · AWS-shaped · Terraform in-repo
 
 ExamWizards is a role-based learning platform: instructors and admins manage courses and exams; students enroll, pay where needed, take timed assessments, and view results. The runtime is **Spring Boot + MySQL**, the client is **React (Vite)**, and workloads are packaged as **containers** with a production target on **AWS** (ECS Fargate, RDS, edge delivery, IaC under `infra/`).
 
-> **Hosting:** Always-on public cloud was switched off after validation to save cost. The repo still reflects how you would ship it on AWS (Terraform, ECS task templates, CI). Demos can run via Docker Compose, lightweight Azure/Vercel previews, or a spare EC2 — pick what fits the budget.
+> **Hosting:** Always-on public cloud was switched off after validation to save cost. The repo still reflects how you would ship it on AWS (Terraform, ECS task templates, CI). Demos can run via Docker Compose, lightweight Azure/Vercel previews.
 
 ---
 
