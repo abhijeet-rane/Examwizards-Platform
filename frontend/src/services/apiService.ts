@@ -16,6 +16,17 @@ const apiClient: AxiosInstance = axios.create({
 // Request interceptor to add auth token
 apiClient.interceptors.request.use(
   (config) => {
+    // FormData must use multipart boundary set by the browser. Never send default
+    // application/json or a manual "multipart/form-data" without boundary.
+    if (config.data instanceof FormData && config.headers) {
+      const h = config.headers as { delete?: (name: string) => void } & Record<string, unknown>;
+      if (typeof h.delete === 'function') {
+        h.delete('Content-Type');
+      } else {
+        delete h['Content-Type'];
+      }
+    }
+
     const token = localStorage.getItem('token');
     if (token) {
       // Check if token looks valid (basic format check)
@@ -177,11 +188,7 @@ export class ApiService {
 
   // Course Management
   async createCourse(formData: FormData) {
-    const response = await apiClient.post('/courses/create', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
+    const response = await apiClient.post('/courses/create', formData);
     return response.data;
   }
 
@@ -404,11 +411,7 @@ export class ApiService {
 
   async updateCourse(courseId: number, formData: FormData) {
     try {
-      const response = await apiClient.put(`/courses/${courseId}`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      const response = await apiClient.put(`/courses/${courseId}`, formData);
       return response.data;
     } catch (error) {
       throw handleApiError(error, {
@@ -1052,9 +1055,6 @@ export class ApiService {
       formData.append('file', file);
 
       const response = await apiClient.post(endpoint, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
         timeout: 60000, // 60 seconds for file uploads
       });
 

@@ -32,6 +32,7 @@ public class DatabaseMigrationService implements ApplicationRunner {
         try {
             // Create tables if they don't exist (fallback method)
             createTablesIfNotExist();
+            ensureCourseEnrollmentTablesIfMissing();
             
             // Check and fix users table AUTO_INCREMENT
             fixUsersTableAutoIncrement();
@@ -292,6 +293,67 @@ public class DatabaseMigrationService implements ApplicationRunner {
             
         } catch (Exception e) {
             logger.error("Error creating tables", e);
+        }
+    }
+
+    /**
+     * Preview / manual DBs sometimes only have {@code users}. Hibernate may not create these
+     * before first use; ensure minimal schema so course CRUD and enrollments work.
+     */
+    private void ensureCourseEnrollmentTablesIfMissing() {
+        try {
+            if (!checkTableExists("courses")) {
+                logger.info("Creating courses table (missing)");
+                jdbcTemplate.execute("""
+                    CREATE TABLE courses (
+                        id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                        name VARCHAR(100) NOT NULL,
+                        instructor_id BIGINT NULL,
+                        visibility VARCHAR(50) NOT NULL DEFAULT 'PRIVATE',
+                        pricing VARCHAR(50) NOT NULL DEFAULT 'FREE',
+                        price DECIMAL(10,2) NULL,
+                        description TEXT NULL,
+                        UNIQUE KEY uk_courses_name (name),
+                        KEY idx_courses_instructor (instructor_id),
+                        CONSTRAINT fk_courses_instructor FOREIGN KEY (instructor_id) REFERENCES users(id) ON DELETE SET NULL
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+                    """);
+            }
+
+            if (!checkTableExists("course_allowed_emails")) {
+                logger.info("Creating course_allowed_emails table (missing)");
+                jdbcTemplate.execute("""
+                    CREATE TABLE course_allowed_emails (
+                        course_id BIGINT NOT NULL,
+                        email VARCHAR(255) NOT NULL,
+                        KEY idx_cae_course (course_id),
+                        CONSTRAINT fk_cae_course FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+                    """);
+            }
+
+            if (!checkTableExists("enrollments")) {
+                logger.info("Creating enrollments table (missing)");
+                jdbcTemplate.execute("""
+                    CREATE TABLE enrollments (
+                        id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                        student_id BIGINT NOT NULL,
+                        course_id BIGINT NOT NULL,
+                        enrollment_date DATETIME(6) NOT NULL,
+                        status VARCHAR(50) NOT NULL DEFAULT 'ENROLLED',
+                        payment_transaction_id VARCHAR(255) NULL,
+                        created_at DATETIME(6) NOT NULL,
+                        updated_at DATETIME(6) NOT NULL,
+                        UNIQUE KEY unique_enrollment (student_id, course_id),
+                        KEY idx_student_enrollments (student_id),
+                        KEY idx_course_enrollments (course_id),
+                        CONSTRAINT fk_enrollment_student FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE,
+                        CONSTRAINT fk_enrollment_course FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+                    """);
+            }
+        } catch (Exception e) {
+            logger.warn("Could not ensure course/enrollment tables: {}", e.getMessage());
         }
     }
 }

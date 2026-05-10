@@ -54,8 +54,8 @@ public class CourseController {
     @Autowired
     private ValidationService validationService;
 
+    /** Avoid @Transactional here: swallowing DB errors after a failed persist leaves the TX rollback-only and commit throws outside this method. */
     @PostMapping("/create")
-    @Transactional
     public ResponseEntity<?> createCourse(@RequestParam("name") String name,
                                           @RequestParam(value = "description", required = false) String description,
                                           @RequestParam("visibility") String visibilityStr,
@@ -63,7 +63,11 @@ public class CourseController {
                                           @RequestParam(value = "price", required = false) String priceStr,
                                           @RequestParam(value = "file", required = false) MultipartFile file,
                                           Authentication authentication) {
-        
+        if (authentication == null || !authentication.isAuthenticated()) {
+            logger.warn("Unauthorized access attempt to course creation endpoint");
+            return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
+        }
+
         String username = authentication.getName();
         logger.info("Course creation request by instructor: {} for course: {}", username, name);
         logger.info("Received parameters - pricing: {}, priceStr: '{}'", pricingStr, priceStr);
@@ -231,6 +235,11 @@ public class CourseController {
     @GetMapping("/instructor")
     @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public ResponseEntity<?> getCoursesForInstructor(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            logger.warn("Unauthorized access attempt to instructor courses endpoint");
+            return ResponseEntity.status(401).body("Unauthorized");
+        }
+
         String username = authentication.getName();
         logger.info("Fetching courses for instructor: {}", username);
         
