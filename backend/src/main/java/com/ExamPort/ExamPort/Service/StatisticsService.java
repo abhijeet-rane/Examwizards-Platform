@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Supplier;
 
 @Service
 public class StatisticsService {
@@ -35,63 +36,42 @@ public class StatisticsService {
      */
     public Map<String, Object> getPublicStatistics() {
         logger.info("Calculating public statistics");
-        
+
         Map<String, Object> stats = new HashMap<>();
-        
-        try {
-            // Total registered users
-            long totalUsers = userRepository.count();
-            logger.debug("Total users count: {}", totalUsers);
-            
-            // Total exam attempts/results
-            long totalExamAttempts = resultRepository.count();
-            logger.debug("Total exam attempts count: {}", totalExamAttempts);
-            
-            // Total courses available
-            long totalCourses = courseRepository.count();
-            logger.debug("Total courses count: {}", totalCourses);
-            
-            // Total enrollments
-            long totalEnrollments = enrollmentRepository.count();
-            logger.debug("Total enrollments count: {}", totalEnrollments);
-            
-            // Total exams created
-            long totalExams = examRepository.count();
-            logger.debug("Total exams count: {}", totalExams);
-            
-            // Calculate some derived statistics
-            double averageAttemptsPerUser = totalUsers > 0 ? (double) totalExamAttempts / totalUsers : 0;
-            double averageEnrollmentsPerUser = totalUsers > 0 ? (double) totalEnrollments / totalUsers : 0;
-            
-            // Build statistics map
-            stats.put("activeUsers", totalUsers);
-            stats.put("examsCompleted", totalExamAttempts);
-            stats.put("totalCourses", totalCourses);
-            stats.put("totalEnrollments", totalEnrollments);
-            stats.put("totalExams", totalExams);
-            stats.put("averageAttemptsPerUser", Math.round(averageAttemptsPerUser * 100.0) / 100.0);
-            stats.put("averageEnrollmentsPerUser", Math.round(averageEnrollmentsPerUser * 100.0) / 100.0);
-            stats.put("success", true);
-            
-            logger.info("Public statistics calculated: {} users, {} exam attempts, {} courses, {} enrollments, {} exams", 
-                       totalUsers, totalExamAttempts, totalCourses, totalEnrollments, totalExams);
-            
-        } catch (Exception e) {
-            logger.error("Error calculating public statistics: {}", e.getMessage(), e);
-            
-            // Return default values on error
-            stats.put("activeUsers", 0);
-            stats.put("examsCompleted", 0);
-            stats.put("totalCourses", 0);
-            stats.put("totalEnrollments", 0);
-            stats.put("totalExams", 0);
-            stats.put("averageAttemptsPerUser", 0.0);
-            stats.put("averageEnrollmentsPerUser", 0.0);
-            stats.put("success", false);
-            stats.put("error", e.getMessage());
-        }
-        
+
+        // Count each metric independently so one broken table/query does not zero-out all stats.
+        long totalUsers = safeCount("users", () -> userRepository.count());
+        long totalExamAttempts = safeCount("results", () -> resultRepository.count());
+        long totalCourses = safeCount("courses", () -> courseRepository.count());
+        long totalEnrollments = safeCount("enrollments", () -> enrollmentRepository.count());
+        long totalExams = safeCount("exams", () -> examRepository.count());
+
+        double averageAttemptsPerUser = totalUsers > 0 ? (double) totalExamAttempts / totalUsers : 0;
+        double averageEnrollmentsPerUser = totalUsers > 0 ? (double) totalEnrollments / totalUsers : 0;
+
+        stats.put("activeUsers", totalUsers);
+        stats.put("examsCompleted", totalExamAttempts);
+        stats.put("totalCourses", totalCourses);
+        stats.put("totalEnrollments", totalEnrollments);
+        stats.put("totalExams", totalExams);
+        stats.put("averageAttemptsPerUser", Math.round(averageAttemptsPerUser * 100.0) / 100.0);
+        stats.put("averageEnrollmentsPerUser", Math.round(averageEnrollmentsPerUser * 100.0) / 100.0);
+        stats.put("success", true);
+
+        logger.info("Public statistics calculated: {} users, {} exam attempts, {} courses, {} enrollments, {} exams",
+                totalUsers, totalExamAttempts, totalCourses, totalEnrollments, totalExams);
+
         return stats;
+    }
+
+    private long safeCount(String metricName, Supplier<Long> countSupplier) {
+        try {
+            Long value = countSupplier.get();
+            return value != null ? value : 0L;
+        } catch (Exception e) {
+            logger.warn("Could not fetch {} count. Using 0. Cause: {}", metricName, e.getMessage());
+            return 0L;
+        }
     }
     
     /**

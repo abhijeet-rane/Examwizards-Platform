@@ -447,7 +447,7 @@ Ports: MySQL **3306**, API **8080**, SPA **3000**.
 
 ```text
 Examwizards-Platform/
-├── .github/workflows/     CI; optional Terraform plan (OIDC)
+├── .github/workflows/     CI; Terraform plan (OIDC)
 ├── backend/               Spring Boot, Maven wrapper, Dockerfile
 ├── frontend/              Vite SPA, Dockerfile, vercel.json
 ├── chatbot/               Gemini helper (Node)
