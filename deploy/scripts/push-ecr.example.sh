@@ -30,3 +30,12 @@ echo "Pushing ${URI}"
 docker push "${URI}"
 
 echo "Done. Use this URI in ecs-task-definitions or Terraform."
+
+# Optional: chatbot image (uncomment and set ECR_REPO_CHATBOT=examwizards-chatbot)
+# ECR_REPO_CHATBOT="${ECR_REPO_CHATBOT:-}"
+# if [ -n "${ECR_REPO_CHATBOT}" ]; then
+#   URI_BOT="${REGISTRY}/${ECR_REPO_CHATBOT}:${IMAGE_TAG}"
+#   docker build -t "${ECR_REPO_CHATBOT}:${IMAGE_TAG}" -f chatbot/Dockerfile chatbot
+#   docker tag "${ECR_REPO_CHATBOT}:${IMAGE_TAG}" "${URI_BOT}"
+#   docker push "${URI_BOT}"
+# fi

@@ -1,11 +1,17 @@
+const path = require("path");
 const express = require("express");
 const cors = require("cors");
 const { GoogleGenAI } = require("@google/genai");
-require('dotenv').config({ path: '../backend/.env' });
+require("dotenv").config({ path: path.join(__dirname, "..", ".env") });
+require("dotenv").config({ path: path.join(__dirname, "..", "backend", ".env") });
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+app.get("/health", (_req, res) => {
+  res.status(200).json({ status: "ok", service: "examwizards-chatbot" });
+});
 
 // Initialize Google AI with environment variable
 const apiKey = process.env.GENAI_API_KEY;
@@ -115,4 +121,4 @@ app.post("/api/ask", async (req, res) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`backend running on port ${PORT}`));
+app.listen(PORT, () => console.log(`ExamWizards chatbot listening on port ${PORT}`));

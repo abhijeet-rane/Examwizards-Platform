@@ -11,10 +11,11 @@ These JSON documents are **templates** for `aws ecs register-task-definition` or
 
 ## Health checks
 
-Point the ALB target group and/or container `healthCheck` at a stable HTTP path your Spring app exposes publicly (for example a dedicated health controller consistent with your `SecurityConfig`).
+Point the ALB target group and/or container `healthCheck` at a stable HTTP path your Spring app exposes publicly (for example a dedicated health controller consistent with your `SecurityConfig`). For the chatbot container, use `GET /health` on port 5000.
 
 ## Files
 
 | File | Role |
 |------|------|
 | `examwizards-api-task-definition.json` | Single-container Fargate task for the Spring Boot API |
+| `examwizards-chatbot-task-definition.json` | Node chatbot service (`PORT` 5000, `GET /health`, `POST /api/ask`; inject `GENAI_API_KEY` via Secrets Manager) |

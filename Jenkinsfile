@@ -41,11 +41,38 @@ pipeline {
             }
         }
 
+        stage('Chatbot verify') {
+            steps {
+                dir('chatbot') {
+                    script {
+                        if (isUnix()) {
+                            sh '''
+                                npm ci
+                                node --check server.js
+                            '''
+                        } else {
+                            bat 'npm ci'
+                            bat 'node --check server.js'
+                        }
+                    }
+                }
+            }
+        }
+
         stage('Build API image') {
             steps {
                 script {
                     echo "Building Docker image ${params.IMAGE_NAME}:${params.IMAGE_TAG}"
                     docker.build("${params.IMAGE_NAME}:${params.IMAGE_TAG}", "-f backend/Dockerfile backend")
+                }
+            }
+        }
+
+        stage('Build Chatbot image') {
+            steps {
+                script {
+                    echo "Building Docker image examwizards-chatbot:${params.IMAGE_TAG}"
+                    docker.build("examwizards-chatbot:${params.IMAGE_TAG}", "-f chatbot/Dockerfile chatbot")
                 }
             }
         }

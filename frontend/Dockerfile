@@ -13,6 +13,12 @@ RUN npm ci
 # Copy source code
 COPY . .
 
+# Vite embeds these at build time (override per environment via docker-compose build.args or CI env)
+ARG VITE_API_BASE_URL=http://localhost:8080/api
+ARG VITE_CHATBOT_API_URL=http://localhost:5000
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+ENV VITE_CHATBOT_API_URL=$VITE_CHATBOT_API_URL
+
 # Build the application
 RUN npm run build
 

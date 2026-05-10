@@ -1,0 +1,53 @@
+{
+  "family": "examwizards-chatbot",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "256",
+  "memory": "512",
+  "executionRoleArn": "arn:aws:iam::REPLACE_ACCOUNT_ID:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::REPLACE_ACCOUNT_ID:role/examwizardsChatbotTaskRole",
+  "containerDefinitions": [
+    {
+      "name": "chatbot",
+      "image": "REPLACE_ACCOUNT_ID.dkr.ecr.REPLACE_REGION.amazonaws.com/examwizards-chatbot:latest",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 5000,
+          "protocol": "tcp"
+        }
+      ],
+      "environment": [
+        {
+          "name": "NODE_ENV",
+          "value": "production"
+        },
+        {
+          "name": "PORT",
+          "value": "5000"
+        }
+      ],
+      "secrets": [
+        {
+          "name": "GENAI_API_KEY",
+          "valueFrom": "arn:aws:secretsmanager:REPLACE_REGION:REPLACE_ACCOUNT_ID:secret:examwizards/genai:api_key::"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/examwizards-chatbot",
+          "awslogs-region": "REPLACE_REGION",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "healthCheck": {
+        "command": ["CMD-SHELL", "wget -q -O- http://localhost:5000/health || exit 1"],
+        "interval": 30,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 10
+      }
+    }
+  ]
+}

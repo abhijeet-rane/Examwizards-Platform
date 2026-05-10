@@ -896,9 +896,11 @@ export class ApiService {
     }
   }
 
-  // Chatbot endpoint
+  // Chatbot endpoint (set VITE_CHATBOT_API_URL for preview/production — no trailing /api)
   async askChatbot(question: string) {
-    const CHATBOT_API_URL = 'http://localhost:5000/api/ask';
+    const base =
+      import.meta.env.VITE_CHATBOT_API_URL?.replace(/\/$/, '') || 'http://localhost:5000';
+    const CHATBOT_API_URL = `${base}/api/ask`;
     try {
       const response = await axios.post(CHATBOT_API_URL, { question });
       return response.data;
