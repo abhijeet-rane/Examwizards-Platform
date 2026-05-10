@@ -43,15 +43,15 @@ const About = () => {
 
   const displayStats = [
     { 
-      number: stats.activeUsers > 0 ? `${stats.activeUsers.toLocaleString()}+` : '8+', 
+      number: `${stats.activeUsers.toLocaleString()}+`,
       label: 'Active Users' 
     },
     { 
-      number: stats.examsCompleted > 0 ? `${stats.examsCompleted.toLocaleString()}+` : '8+', 
+      number: `${stats.examsCompleted.toLocaleString()}+`,
       label: 'Exams Conducted' 
     },
     { 
-      number: stats.totalCourses > 0 ? `${stats.totalCourses.toLocaleString()}+` : '5+', 
+      number: `${stats.totalCourses.toLocaleString()}+`,
       label: 'Courses Available' 
     }
   ];

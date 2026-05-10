@@ -30,45 +30,6 @@ const Testimonials = () => {
   const [stats, setStats] = useState<ReviewStats | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Fallback testimonials in case no real reviews are available
-  const fallbackTestimonials = [
-    {
-      name: 'Prof. A. Mehta',
-      role: 'Head of Computer Science',
-      institution: 'Delhi University',
-      image: 'https://images.pexels.com/photos/5212345/pexels-photo-5212345.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop',
-      rating: 5,
-      text: 'ExamWizards made our semester assessments seamless. The platform is intuitive, reliable, and has significantly reduced our administrative workload.',
-      highlight: 'Reduced admin workload by 70%'
-    },
-    {
-      name: 'Ravi Kumar',
-      role: 'Final Year Student',
-      institution: 'IIT Bombay',
-      image: 'https://images.pexels.com/photos/2379005/pexels-photo-2379005.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop',
-      rating: 5,
-      text: 'The timer, auto-submit, and instant reports are excellent! The interface is clean and I never worry about technical issues during exams.',
-      highlight: 'Zero technical difficulties'
-    },
-    {
-      name: 'Dr. Sarah Johnson',
-      role: 'Academic Director',
-      institution: 'Oxford Online',
-      image: 'https://images.pexels.com/photos/3778876/pexels-photo-3778876.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop',
-      rating: 5,
-      text: 'Intuitive interface and reliable platform for remote exams. The analytics help us understand student performance better than ever.',
-      highlight: 'Enhanced student insights'
-    },
-    {
-      name: 'Michael Chen',
-      role: 'IT Administrator',
-      institution: 'Singapore Tech Institute',
-      image: 'https://images.pexels.com/photos/2380794/pexels-photo-2380794.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop',
-      rating: 5,
-      text: 'The security features and scalability are outstanding. We conducted 500+ simultaneous exams without any issues.',
-      highlight: '500+ concurrent exams'
-    }
-  ];
 
   useEffect(() => {
     fetchReviews();
@@ -77,21 +38,6 @@ const Testimonials = () => {
   const fetchReviews = async () => {
     try {
       setLoading(true);
-
-      // First test if the review system is working
-      try {
-        const testResponse = await fetch(`${API_BASE}/reviews/test`);
-        console.log('Review test endpoint status:', testResponse.status);
-        if (!testResponse.ok) {
-          console.warn('Review system test failed, using fallback testimonials');
-          setLoading(false);
-          return;
-        }
-      } catch (testError) {
-        console.warn('Review system not available, using fallback testimonials:', testError);
-        setLoading(false);
-        return;
-      }
 
       const [reviewsResponse, statsResponse] = await Promise.all([
         apiService.getRecentReviews(6),
@@ -107,7 +53,7 @@ const Testimonials = () => {
       }
     } catch (error) {
       console.error('Error fetching reviews:', error);
-      // Use fallback data if API fails
+      // Keep empty state if API fails
     } finally {
       setLoading(false);
     }
@@ -159,23 +105,21 @@ const Testimonials = () => {
     return truncated + '...';
   };
 
-  // Use real reviews if available, otherwise use fallback
-  const displayData = reviews.length > 0 ? reviews : fallbackTestimonials;
+  const displayData = reviews;
 
   const nextTestimonial = () => {
+    if (displayData.length === 0) return;
     setCurrentIndex((prev) => (prev + 1) % displayData.length);
   };
 
   const prevTestimonial = () => {
+    if (displayData.length === 0) return;
     setCurrentIndex((prev) => (prev - 1 + displayData.length) % displayData.length);
   };
 
   const getCurrentText = () => {
     const currentItem = displayData[currentIndex];
-    if (reviews.length > 0) {
-      return truncateText(currentItem.content, 200);
-    }
-    return truncateText(currentItem.text, 200);
+    return truncateText(currentItem.content, 200);
   };
 
   return (
@@ -199,16 +143,26 @@ const Testimonials = () => {
                 ))}
               </div>
               <span className="text-lg font-bold text-gray-900">
-                {stats ? stats.averageRating.toFixed(1) : '4.9'}/5
+                {stats ? stats.averageRating.toFixed(1) : '0.0'}/5
               </span>
               <span className="text-gray-600">
-                • Based on {stats ? stats.totalReviews : '250'}+ reviews
+                • Based on {stats ? stats.totalReviews : 0} reviews
               </span>
             </div>
           </div>
         </div>
 
+        {displayData.length === 0 && !loading && (
+          <div className="max-w-3xl mx-auto bg-gray-50 border border-gray-200 rounded-xl p-8 text-center">
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">No reviews yet</h3>
+            <p className="text-gray-600">
+              Reviews submitted by students and instructors will appear here automatically.
+            </p>
+          </div>
+        )}
+
         {/* Compact Testimonial Layout */}
+        {displayData.length > 0 && (
         <div className="relative max-w-4xl mx-auto">
           {/* Navigation Controls */}
           <div className="absolute top-1/2 -translate-y-1/2 -left-4 md:-left-8 z-10">
@@ -234,21 +188,15 @@ const Testimonials = () => {
               {/* Left Section - User Profile */}
               <div className="col-span-2 bg-gradient-to-br from-purple-600 to-indigo-700 p-8 text-white flex flex-col justify-center items-center text-center">
                 <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center text-white font-bold text-2xl mb-4">
-                  {reviews.length > 0
-                    ? displayData[currentIndex].user.fullName.charAt(0).toUpperCase()
-                    : displayData[currentIndex].name.charAt(0).toUpperCase()
-                  }
+                  {displayData[currentIndex].user.fullName.charAt(0).toUpperCase()}
                 </div>
 
                 <h3 className="text-base font-bold mb-2 leading-tight">
-                  {reviews.length > 0
-                    ? displayData[currentIndex].user.fullName
-                    : displayData[currentIndex].name
-                  }
+                  {displayData[currentIndex].user.fullName}
                 </h3>
 
                 <p className="text-purple-100 text-sm mb-4">
-                  {reviews.length > 0 ? getRoleDisplay(displayData[currentIndex].user.role) : displayData[currentIndex].role}
+                  {getRoleDisplay(displayData[currentIndex].user.role)}
                 </p>
 
                 {/* Rating */}
@@ -261,7 +209,7 @@ const Testimonials = () => {
                 {/* Badge */}
                 <div className="bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 border border-white/20">
                   <span className="text-sm font-medium text-white">
-                    Verified {reviews.length > 0 ? getRoleDisplay(displayData[currentIndex].user.role) : 'User'}
+                    Verified {getRoleDisplay(displayData[currentIndex].user.role)}
                   </span>
                 </div>
               </div>
@@ -280,17 +228,14 @@ const Testimonials = () => {
                   <div className="flex items-center space-x-2">
                     <div className="w-1.5 h-1.5 bg-purple-500 rounded-full"></div>
                     <span className="text-xs text-gray-500">
-                      {reviews.length > 0 ? 'Verified Review' : 'Featured Testimonial'}
+                      Verified Review
                     </span>
                   </div>
                   <div className="text-xs text-gray-400">
-                    {reviews.length > 0
-                      ? new Date(displayData[currentIndex].createdAt).toLocaleDateString('en-US', {
-                        month: 'short',
-                        year: 'numeric'
-                      })
-                      : 'Aug 2025'
-                    }
+                    {new Date(displayData[currentIndex].createdAt).toLocaleDateString('en-US', {
+                      month: 'short',
+                      year: 'numeric'
+                    })}
                   </div>
                 </div>
               </div>
@@ -311,6 +256,7 @@ const Testimonials = () => {
             ))}
           </div>
         </div>
+        )}
       </div>
     </section>
   );
