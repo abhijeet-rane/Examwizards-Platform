@@ -4,6 +4,7 @@ import com.ExamPort.ExamPort.Entity.*;
 import com.ExamPort.ExamPort.Repository.CourseRepository;
 import com.ExamPort.ExamPort.Repository.UserRepository;
 import com.ExamPort.ExamPort.Repository.EnrollmentRepository;
+import com.ExamPort.ExamPort.Repository.Exam_repo;
 import com.ExamPort.ExamPort.Service.PaymentService;
 import com.ExamPort.ExamPort.Service.ValidationService;
 import com.ExamPort.ExamPort.Exception.ValidationException;
@@ -43,6 +44,9 @@ public class CourseController {
     
     @Autowired
     private EnrollmentRepository enrollmentRepository;
+
+    @Autowired
+    private Exam_repo examRepo;
     
     @Autowired
     private PaymentService paymentService;
@@ -225,6 +229,7 @@ public class CourseController {
     }
 
     @GetMapping("/instructor")
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public ResponseEntity<?> getCoursesForInstructor(Authentication authentication) {
         String username = authentication.getName();
         logger.info("Fetching courses for instructor: {}", username);
@@ -259,19 +264,21 @@ public class CourseController {
                 Long enrollmentCount = 0L;
                 if (course.getVisibility() == CourseVisibility.PRIVATE) {
                     // For private courses, count actual enrollments but also show allowed emails count
-                    enrollmentCount = enrollmentRepository.countEnrolledStudentsByCourseId(course.getId());
+                    Long ec = enrollmentRepository.countEnrolledStudentsByCourseId(course.getId());
+                    enrollmentCount = ec != null ? ec : 0L;
                     int allowedEmailsCount = course.getAllowedEmails() != null ? course.getAllowedEmails().size() : 0;
                     courseData.put("allowedEmailsCount", allowedEmailsCount);
                     logger.debug("Private course {} - Enrolled: {}, Allowed emails: {}", 
                                course.getName(), enrollmentCount, allowedEmailsCount);
                 } else {
                     // For public courses, count actual enrollments
-                    enrollmentCount = enrollmentRepository.countEnrolledStudentsByCourseId(course.getId());
+                    Long ec = enrollmentRepository.countEnrolledStudentsByCourseId(course.getId());
+                    enrollmentCount = ec != null ? ec : 0L;
                 }
                 courseData.put("enrollmentCount", enrollmentCount);
                 
-                // Add exam count (if exams relationship exists)
-                int examCount = course.getExams() != null ? course.getExams().size() : 0;
+                Long examTotal = examRepo.countByCourseNative(course.getId());
+                int examCount = examTotal != null ? examTotal.intValue() : 0;
                 courseData.put("examCount", examCount);
                 
                 coursesWithStats.add(courseData);
@@ -329,8 +336,8 @@ public class CourseController {
                 ));
                 
                 // Add enrollment count
-                Long enrollmentCount = enrollmentRepository.countEnrolledStudentsByCourseId(course.getId());
-                courseData.put("enrollmentCount", enrollmentCount);
+                Long enc = enrollmentRepository.countEnrolledStudentsByCourseId(course.getId());
+                courseData.put("enrollmentCount", enc != null ? enc : 0L);
                 
                 coursesWithStats.add(courseData);
             }

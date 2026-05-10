@@ -124,7 +124,11 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
      * @param courseId The course ID
      * @return Number of students enrolled in the course
      */
-    @Query("SELECT COUNT(e) FROM Enrollment e WHERE e.course.id = :courseId AND e.status = 'ENROLLED'")
+    /**
+     * Native count avoids Hibernate entity graph quirks on some deployments (consistent with Flyway DDL).
+     */
+    @Query(value = "SELECT COUNT(*) FROM enrollments WHERE course_id = :courseId AND status = 'ENROLLED'",
+           nativeQuery = true)
     Long countEnrolledStudentsByCourseId(@Param("courseId") Long courseId);
     
     /**
@@ -180,7 +184,8 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
     }
     
     default long countByCourseId(Long courseId) {
-        return countEnrolledStudentsByCourseId(courseId);
+        Long n = countEnrolledStudentsByCourseId(courseId);
+        return n != null ? n : 0L;
     }
     
     /**
