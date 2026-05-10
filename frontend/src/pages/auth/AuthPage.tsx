@@ -23,6 +23,9 @@ interface RegisterFormData {
   role: 'instructor' | 'student';
 }
 
+const AUTH_API_BASE =
+  import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '') || '/api';
+
 const AuthPage = () => {
   const [isRegisterMode, setIsRegisterMode] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -111,7 +114,7 @@ const AuthPage = () => {
   const onRegisterSubmit = async (data: RegisterFormData) => {
     setLoading(true);
     try {
-      const response = await fetch('/api/auth/register', {
+      const response = await fetch(`${AUTH_API_BASE}/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

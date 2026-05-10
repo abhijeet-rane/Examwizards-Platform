@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Star, ChevronLeft, ChevronRight, Quote } from 'lucide-react';
 import { apiService } from '../services/apiService';
 
+const API_BASE =
+  import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '') || '/api';
+
 interface Review {
   id: number;
   content: string;
@@ -77,7 +80,7 @@ const Testimonials = () => {
 
       // First test if the review system is working
       try {
-        const testResponse = await fetch('/api/reviews/test');
+        const testResponse = await fetch(`${API_BASE}/reviews/test`);
         console.log('Review test endpoint status:', testResponse.status);
         if (!testResponse.ok) {
           console.warn('Review system test failed, using fallback testimonials');

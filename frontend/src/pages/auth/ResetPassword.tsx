@@ -4,6 +4,9 @@ import { Lock, Eye, EyeOff, CheckCircle, XCircle, ArrowLeft, BookOpen, Sparkles 
 import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
 
+const AUTH_API_BASE =
+  import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '') || '/api';
+
 const ResetPassword = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -55,7 +58,7 @@ const ResetPassword = () => {
     setLoading(true);
     
     try {
-      const response = await fetch('/api/auth/reset-password', {
+      const response = await fetch(`${AUTH_API_BASE}/auth/reset-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

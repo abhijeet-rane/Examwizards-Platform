@@ -4,6 +4,9 @@ import { Mail, ArrowLeft, Send, CheckCircle, BookOpen, Sparkles } from 'lucide-r
 import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
 
+const AUTH_API_BASE =
+  import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '') || '/api';
+
 const ForgotPassword = () => {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
@@ -25,7 +28,7 @@ const ForgotPassword = () => {
     setLoading(true);
     
     try {
-      const response = await fetch('/api/auth/request-password-reset', {
+      const response = await fetch(`${AUTH_API_BASE}/auth/request-password-reset`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

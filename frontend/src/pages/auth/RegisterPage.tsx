@@ -17,6 +17,9 @@ interface RegisterFormData {
   role: 'admin' | 'instructor' | 'student';
 }
 
+const AUTH_API_BASE =
+  import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '') || '/api';
+
 const RegisterPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -34,7 +37,7 @@ const RegisterPage = () => {
     setLoading(true);
     try {
       // Call the backend registration endpoint directly to get email verification info
-      const response = await fetch('/api/auth/register', {
+      const response = await fetch(`${AUTH_API_BASE}/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

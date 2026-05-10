@@ -5,6 +5,9 @@ import { apiService } from '../../services/apiService';
 import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
 
+const AUTH_API_BASE =
+  import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '') || '/api';
+
 const VerifyEmail = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -26,7 +29,7 @@ const VerifyEmail = () => {
 
   const verifyEmailToken = async (verificationToken: string) => {
     try {
-      const response = await fetch(`/api/auth/verify-email?token=${verificationToken}`, {
+      const response = await fetch(`${AUTH_API_BASE}/auth/verify-email?token=${encodeURIComponent(verificationToken)}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -65,7 +68,7 @@ const VerifyEmail = () => {
 
     setResending(true);
     try {
-      const response = await fetch('/api/auth/resend-verification', {
+      const response = await fetch(`${AUTH_API_BASE}/auth/resend-verification`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
