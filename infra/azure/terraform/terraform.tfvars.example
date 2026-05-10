@@ -1,5 +1,27 @@
-# Example only — copy to terraform.tfvars (not committed) for preview apply.
+# Copy to `terraform.tfvars` (gitignored). Never commit real secrets.
 
-enable_azure  = "false"
-location      = "eastus2"
-project_name  = "examwizards-preview"
+enable_azure = "false"
+
+# Must be one of YOUR subscription's allowed regions (policy). Example list:
+#   southeastasia | uaenorth | centralindia | austriaeast | eastasia
+location = "centralindia"
+
+# If MySQL Flexible Server returns ProvisionNotSupportedForRegion in `location`, set this to another
+# allowed region (try southeastasia, then eastasia, uaenorth, austriaeast).
+mysql_location = "southeastasia"
+project_name = "ew-prev-abc123" # Must be globally unique for Web App URLs — change this.
+
+mysql_administrator_login = "ewadmin"
+mysql_sku_name            = "B_Standard_B1ms"
+mysql_storage_gb        = 20
+
+app_service_sku = "B1"
+
+# Your Vercel production or preview URL (used as FRONTEND_URL on the API).
+frontend_url = "https://your-app.vercel.app"
+
+# Optional: your home/public IP(s) for MySQL admin from laptop (use /32).
+# developer_ip_allowlist = ["203.0.113.10"]
+
+# Optional: set Gemini key here to inject into chatbot app settings (otherwise add in Azure Portal after apply).
+# genai_api_key = "your-key"

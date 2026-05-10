@@ -5,8 +5,11 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
@@ -14,13 +17,39 @@ import java.util.Map;
 
 @Component
 public class JwtUtil {
-    
+
     private static final Logger logger = LoggerFactory.getLogger(JwtUtil.class);
+
+    /** HS256 requires a key of at least 256 bits; use a UTF-8 string of 32+ characters. */
+    @Value("${JWT_SECRET:}")
+    private String jwtSecretFromEnv;
+
+    private Key key;
+
+    private final long EXPIRATION_TIME = 1000 * 60 * 60 * 5; // 5 hours
+
+    @PostConstruct
+    void initSigningKey() {
+        String secret = jwtSecretFromEnv != null ? jwtSecretFromEnv.trim() : "";
+        if (!secret.isEmpty()) {
+            byte[] bytes = secret.getBytes(StandardCharsets.UTF_8);
+            if (bytes.length < 32) {
+                throw new IllegalStateException(
+                    "JWT_SECRET must be at least 32 bytes in UTF-8 for HS256 (current: " + bytes.length + ")");
+            }
+            this.key = Keys.hmacShaKeyFor(bytes);
+            logger.info("JWT signing key loaded from JWT_SECRET");
+        } else {
+            this.key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+            logger.warn(
+                "JWT_SECRET is not set; using an ephemeral HS256 key (tokens invalid after restart). "
+                    + "Set JWT_SECRET to a stable value (>= 32 UTF-8 characters).");
+        }
+    }
+
     public Key getKey() {
         return key;
     }
-    private final Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
-    private final long EXPIRATION_TIME = 1000 * 60 * 60 * 5; // 5 hours
 
     public String generateToken(String username, String role) {
         logger.debug("Generating JWT token for user: {} with role: {}", username, role);

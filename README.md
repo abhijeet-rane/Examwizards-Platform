@@ -196,7 +196,7 @@ flowchart TB
 
 ### CI/CD
 
-GitHub Actions builds backend + frontend and validates Terraform. Jenkins (optional) pushes images and can sit in front of manual promotion. ECR + ECS updates stay consistent if you promote **immutable digests** rather than floating `:latest` in prod.
+GitHub Actions builds backend + frontend and validates Terraform. Jenkins pushes images and can sit in front of manual promotion. ECR + ECS updates stay consistent if you promote **immutable digests** rather than floating `:latest` in prod.
 
 ```mermaid
 flowchart LR

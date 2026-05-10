@@ -7,6 +7,7 @@
   "headers": [
     {
       "source": "/(.*)",
+      "destination": "/index.html",
       "headers": [
         {
           "key": "X-Frame-Options",
