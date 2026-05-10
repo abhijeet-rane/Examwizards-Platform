@@ -5,7 +5,7 @@ variable "enable_azure" {
 }
 
 variable "location" {
-  type = string
+  type        = string
   description = <<-EOT
     Azure region for resource group, App Service plan, and web apps. Must match your subscription policy allowlist.
     Example allowlist: southeastasia, uaenorth, centralindia, austriaeast, eastasia — use one of yours exactly.
