@@ -74,7 +74,19 @@ public class InstructorController {
             
         } catch (Exception e) {
             logger.error("Error fetching dashboard data for instructor: {}", username, e);
-            return ResponseEntity.internalServerError().body("Error fetching dashboard data");
+            Map<String, Object> stats = new HashMap<>();
+            stats.put("totalCourses", 0);
+            stats.put("totalEnrollments", 0);
+            stats.put("totalRevenue", 0);
+            stats.put("totalExams", 0);
+            stats.put("totalStudents", 0);
+            stats.put("averageScore", 0.0);
+            stats.put("completionRate", 0.0);
+
+            Map<String, Object> dashboardData = new HashMap<>();
+            dashboardData.put("stats", stats);
+            dashboardData.put("myExams", new java.util.ArrayList<>());
+            return ResponseEntity.ok(dashboardData);
         }
     }
 }

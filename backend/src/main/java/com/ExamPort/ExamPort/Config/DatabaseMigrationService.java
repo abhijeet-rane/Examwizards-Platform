@@ -9,10 +9,6 @@ import org.springframework.core.annotation.Order;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
-import javax.sql.DataSource;
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-
 @Component
 @Order(1) // Run early in the startup process
 public class DatabaseMigrationService implements ApplicationRunner {
@@ -22,18 +18,17 @@ public class DatabaseMigrationService implements ApplicationRunner {
     @Autowired
     private JdbcTemplate jdbcTemplate;
     
-    @Autowired
-    private DataSource dataSource;
-    
     @Override
     public void run(ApplicationArguments args) throws Exception {
         logger.info("=== STARTING DATABASE SCHEMA MIGRATION ===");
-        
+        logJdbcCatalogAndUser();
+
         try {
             // Create tables if they don't exist (fallback method)
             createTablesIfNotExist();
             ensureCourseEnrollmentTablesIfMissing();
             repairCoursesAndEnrollmentColumnsIfNeeded();
+            ensureExamQuestionAndResultTablesIfMissing();
             
             // Check and fix users table AUTO_INCREMENT
             fixUsersTableAutoIncrement();
@@ -50,6 +45,20 @@ public class DatabaseMigrationService implements ApplicationRunner {
             logger.error("Database schema migration failed", e);
             // Don't throw exception to prevent application startup failure
             // The manual ID assignment in AuthController will handle this
+        }
+    }
+
+    /** Confirms which schema the pool uses (must match examwizards in DB_URL). */
+    private void logJdbcCatalogAndUser() {
+        try {
+            String db = jdbcTemplate.queryForObject("SELECT DATABASE()", String.class);
+            String user = jdbcTemplate.queryForObject("SELECT CURRENT_USER()", String.class);
+            Long tableCount = jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE()",
+                    Long.class);
+            logger.info("Migration JDBC context: database={}, user={}, tables_in_schema={}", db, user, tableCount);
+        } catch (Exception e) {
+            logger.error("Could not read JDBC catalog / user for migration diagnostics", e);
         }
     }
     
@@ -142,12 +151,33 @@ public class DatabaseMigrationService implements ApplicationRunner {
     
     private boolean checkTableExists(String tableName) {
         try {
-            DatabaseMetaData metaData = dataSource.getConnection().getMetaData();
-            ResultSet tables = metaData.getTables(null, null, tableName, new String[]{"TABLE"});
-            return tables.next();
+            Integer n = jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND LOWER(table_name) = LOWER(?)",
+                    Integer.class, tableName);
+            return n != null && n > 0;
         } catch (Exception e) {
             logger.error("Error checking if table {} exists", tableName, e);
             return false;
+        }
+    }
+
+    /**
+     * Foreign keys require InnoDB. Legacy or Hibernate MyISAM tables break {@code CREATE TABLE ... REFERENCES users(id)}.
+     */
+    private void ensureInnoDbEngineIfNeeded(String tableName) {
+        try {
+            if (!checkTableExists(tableName)) {
+                return;
+            }
+            String engine = jdbcTemplate.queryForObject(
+                    "SELECT ENGINE FROM information_schema.tables WHERE table_schema = DATABASE() AND LOWER(table_name) = LOWER(?)",
+                    String.class, tableName);
+            if (engine != null && !"InnoDB".equalsIgnoreCase(engine.trim())) {
+                logger.warn("Table {} uses engine {}; converting to InnoDB so foreign keys can be created", tableName, engine);
+                jdbcTemplate.execute("ALTER TABLE `" + tableName + "` ENGINE=InnoDB");
+            }
+        } catch (Exception e) {
+            logger.error("Could not ensure InnoDB engine for table {}", tableName, e);
         }
     }
     
@@ -303,10 +333,13 @@ public class DatabaseMigrationService implements ApplicationRunner {
      */
     private void ensureCourseEnrollmentTablesIfMissing() {
         try {
+            ensureInnoDbEngineIfNeeded("users");
+
             if (!checkTableExists("courses")) {
                 logger.info("Creating courses table (missing)");
+                // No DB-level FK: Azure / mixed collations often reject REFERENCES; JPA does not require it.
                 jdbcTemplate.execute("""
-                    CREATE TABLE courses (
+                    CREATE TABLE IF NOT EXISTS courses (
                         id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
                         name VARCHAR(100) NOT NULL,
                         instructor_id BIGINT NULL,
@@ -315,8 +348,7 @@ public class DatabaseMigrationService implements ApplicationRunner {
                         price DECIMAL(10,2) NULL,
                         description TEXT NULL,
                         UNIQUE KEY uk_courses_name (name),
-                        KEY idx_courses_instructor (instructor_id),
-                        CONSTRAINT fk_courses_instructor FOREIGN KEY (instructor_id) REFERENCES users(id) ON DELETE SET NULL
+                        KEY idx_courses_instructor (instructor_id)
                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
                     """);
             }
@@ -324,11 +356,10 @@ public class DatabaseMigrationService implements ApplicationRunner {
             if (!checkTableExists("course_allowed_emails")) {
                 logger.info("Creating course_allowed_emails table (missing)");
                 jdbcTemplate.execute("""
-                    CREATE TABLE course_allowed_emails (
+                    CREATE TABLE IF NOT EXISTS course_allowed_emails (
                         course_id BIGINT NOT NULL,
                         email VARCHAR(255) NOT NULL,
-                        KEY idx_cae_course (course_id),
-                        CONSTRAINT fk_cae_course FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
+                        KEY idx_cae_course (course_id)
                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
                     """);
             }
@@ -336,7 +367,7 @@ public class DatabaseMigrationService implements ApplicationRunner {
             if (!checkTableExists("enrollments")) {
                 logger.info("Creating enrollments table (missing)");
                 jdbcTemplate.execute("""
-                    CREATE TABLE enrollments (
+                    CREATE TABLE IF NOT EXISTS enrollments (
                         id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
                         student_id BIGINT NOT NULL,
                         course_id BIGINT NOT NULL,
@@ -347,14 +378,115 @@ public class DatabaseMigrationService implements ApplicationRunner {
                         updated_at DATETIME(6) NOT NULL,
                         UNIQUE KEY unique_enrollment (student_id, course_id),
                         KEY idx_student_enrollments (student_id),
-                        KEY idx_course_enrollments (course_id),
-                        CONSTRAINT fk_enrollment_student FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE,
-                        CONSTRAINT fk_enrollment_course FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
+                        KEY idx_course_enrollments (course_id)
                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
                     """);
             }
+
+            logger.info("Schema check after course/enrollment DDL: courses={}, course_allowed_emails={}, enrollments={}",
+                    checkTableExists("courses"), checkTableExists("course_allowed_emails"), checkTableExists("enrollments"));
         } catch (Exception e) {
-            logger.warn("Could not ensure course/enrollment tables: {}", e.getMessage());
+            logger.error("Could not ensure course/enrollment tables", e);
+        }
+    }
+
+    /**
+     * Azure preview DBs sometimes contain only users/reviews/contact_message. JPA queries on
+     * exam/question/result then throw SQLGrammarException. Create minimal tables matching Spring's
+     * physical naming (snake_case columns).
+     */
+    private void ensureExamQuestionAndResultTablesIfMissing() {
+        try {
+            if (!checkTableExists("courses")) {
+                logger.warn("Skipping exam/result DDL: courses table is missing (run ensureCourseEnrollmentTablesIfMissing first)");
+                return;
+            }
+
+            if (!checkTableExists("exam")) {
+                logger.info("Creating exam table (missing)");
+                jdbcTemplate.execute("""
+                    CREATE TABLE IF NOT EXISTS exam (
+                        exam_id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                        course_id BIGINT NULL,
+                        title VARCHAR(255) NOT NULL,
+                        description LONGTEXT,
+                        start_date VARCHAR(255),
+                        start_time VARCHAR(255),
+                        end_date VARCHAR(255),
+                        end_time VARCHAR(255),
+                        instructions LONGTEXT,
+                        total_marks INT,
+                        created_at DATETIME(6),
+                        duration INT NOT NULL,
+                        exam_modifier VARCHAR(255),
+                        isactive BIT(1),
+                        KEY idx_exam_course (course_id)
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+                    """);
+            }
+
+            if (!checkTableExists("question")) {
+                logger.info("Creating question table (missing)");
+                jdbcTemplate.execute("""
+                    CREATE TABLE IF NOT EXISTS question (
+                        que_id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                        question VARCHAR(255) NOT NULL,
+                        type VARCHAR(255) NOT NULL,
+                        marks INT,
+                        ex_id BIGINT,
+                        KEY idx_question_ex (ex_id)
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+                    """);
+            }
+
+            if (!checkTableExists("exam_option")) {
+                logger.info("Creating exam_option table (missing)");
+                jdbcTemplate.execute("""
+                    CREATE TABLE IF NOT EXISTS exam_option (
+                        option_id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                        option_number INT NOT NULL,
+                        available_option VARCHAR(255) NOT NULL,
+                        qid BIGINT,
+                        KEY idx_option_q (qid)
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+                    """);
+            }
+
+            if (!checkTableExists("question_correct_options")) {
+                logger.info("Creating question_correct_options table (missing)");
+                jdbcTemplate.execute("""
+                    CREATE TABLE IF NOT EXISTS question_correct_options (
+                        question_que_id BIGINT NOT NULL,
+                        correct_option_index INT NOT NULL,
+                        KEY idx_qco_q (question_que_id)
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+                    """);
+            }
+
+            if (!checkTableExists("result")) {
+                logger.info("Creating result table (missing)");
+                jdbcTemplate.execute("""
+                    CREATE TABLE IF NOT EXISTS result (
+                        id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                        answers TEXT,
+                        attempt_date DATETIME(6),
+                        feedback TEXT,
+                        passed BOOLEAN,
+                        score DOUBLE,
+                        time_taken INT,
+                        user_rank INT,
+                        exam_exam_id BIGINT,
+                        user_id BIGINT,
+                        KEY idx_result_user (user_id),
+                        KEY idx_result_exam (exam_exam_id)
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+                    """);
+            }
+            logger.info("Schema check after exam/result DDL: exam={}, question={}, exam_option={}, result={}",
+                    checkTableExists("exam"), checkTableExists("question"),
+                    checkTableExists("exam_option"), checkTableExists("result"));
+        } catch (Exception e) {
+            logger.error("Could not ensure exam/question/result tables", e);
         }
     }
 

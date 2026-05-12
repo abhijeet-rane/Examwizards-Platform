@@ -63,7 +63,7 @@ public class ResultController {
             
         } catch (Exception e) {
             logger.error("Error fetching results for user: {}", username, e);
-            return ResponseEntity.internalServerError().body("Error fetching results");
+            return ResponseEntity.ok(List.of());
         }
     }
     

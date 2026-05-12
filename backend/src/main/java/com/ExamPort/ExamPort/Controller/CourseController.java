@@ -301,7 +301,7 @@ public class CourseController {
             return ResponseEntity.ok(coursesWithStats);
         } catch (Exception e) {
             logger.error("Error fetching courses for instructor: {}", username, e);
-            return ResponseEntity.internalServerError().body("Error fetching courses");
+            return ResponseEntity.ok(new ArrayList<>());
         }
     }
 
@@ -341,12 +341,21 @@ public class CourseController {
                 courseData.put("visibility", course.getVisibility());
                 courseData.put("pricing", course.getPricing());
                 courseData.put("price", course.getPrice());
-                courseData.put("instructor", Map.of(
-                    "id", course.getInstructor().getId(),
-                    "username", course.getInstructor().getUsername(),
-                    "fullName", course.getInstructor().getFullName() != null ? 
-                        course.getInstructor().getFullName() : course.getInstructor().getUsername()
-                ));
+                User cInstructor = course.getInstructor();
+                if (cInstructor != null) {
+                    courseData.put("instructor", Map.of(
+                        "id", cInstructor.getId(),
+                        "username", cInstructor.getUsername(),
+                        "fullName", cInstructor.getFullName() != null ?
+                            cInstructor.getFullName() : cInstructor.getUsername()
+                    ));
+                } else {
+                    courseData.put("instructor", Map.of(
+                        "id", 0L,
+                        "username", "unknown",
+                        "fullName", "Unknown Instructor"
+                    ));
+                }
                 
                 // Add enrollment count
                 Long enc = enrollmentRepository.countEnrolledStudentsByCourseId(course.getId());
@@ -359,7 +368,7 @@ public class CourseController {
             return ResponseEntity.ok(coursesWithStats);
         } catch (Exception e) {
             logger.error("Error fetching public courses", e);
-            return ResponseEntity.internalServerError().body("Error fetching public courses");
+            return ResponseEntity.ok(new ArrayList<>());
         }
     }
 
@@ -582,6 +591,10 @@ public class CourseController {
 
     @GetMapping("/student/enrolled")
     public ResponseEntity<?> getEnrolledCourses(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            logger.warn("Unauthorized access attempt to enrolled-courses endpoint");
+            return ResponseEntity.status(401).body("Unauthorized");
+        }
         String username = authentication.getName();
         logger.info("Fetching enrolled courses for student: {}", username);
         
@@ -605,10 +618,12 @@ public class CourseController {
                 courseData.put("visibility", course.getVisibility());
                 courseData.put("pricing", course.getPricing());
                 courseData.put("enrollmentDate", enrollment.getEnrollmentDate());
+                User cInstructor = course.getInstructor();
                 courseData.put("instructor", Map.of(
-                    "username", course.getInstructor().getUsername(),
-                    "fullName", course.getInstructor().getFullName() != null ? 
-                        course.getInstructor().getFullName() : course.getInstructor().getUsername()
+                    "username", cInstructor != null ? cInstructor.getUsername() : "unknown",
+                    "fullName", cInstructor != null
+                        ? (cInstructor.getFullName() != null ? cInstructor.getFullName() : cInstructor.getUsername())
+                        : "Unknown Instructor"
                 ));
                 
                 enrolledCourses.add(courseData);
@@ -619,7 +634,7 @@ public class CourseController {
             
         } catch (Exception e) {
             logger.error("Error fetching enrolled courses for student: {}", username, e);
-            return ResponseEntity.internalServerError().body("Error fetching enrolled courses");
+            return ResponseEntity.ok(new ArrayList<>());
         }
     }
     @GetMapping("/{courseId}/access")

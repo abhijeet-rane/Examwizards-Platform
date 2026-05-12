@@ -404,7 +404,12 @@ public class ApiExamController {
     @GetMapping
     public List<Exam> getExam() {
         logger.info("Fetching all exams");
-        return task.GetExam();
+        try {
+            return task.GetExam();
+        } catch (Exception e) {
+            logger.error("Error fetching all exams", e);
+            return List.of();
+        }
     }
 
     @GetMapping("/{id}")
